@@ -1,0 +1,25 @@
+hour,total,average,demand_group
+00:00:00,39130,53.9,Low Demand
+01:00:00,24164,33.38,Low Demand
+02:00:00,16352,22.87,Low Demand
+03:00:00,8174,11.73,Low Demand
+04:00:00,4428,6.35,Low Demand
+05:00:00,14261,19.89,Low Demand
+06:00:00,55132,76.04,Medium Demand
+07:00:00,154171,212.06,Medium Demand
+08:00:00,261001,359.01,High Demand
+09:00:00,159438,219.31,Medium Demand
+10:00:00,126257,173.67,Medium Demand
+11:00:00,151320,208.14,Medium Demand
+12:00:00,184414,253.32,Medium Demand
+13:00:00,184919,253.66,High Demand
+14:00:00,175652,240.95,Medium Demand
+15:00:00,183149,251.23,Medium Demand
+16:00:00,227748,311.98,High Demand
+17:00:00,336860,461.45,High Demand
+18:00:00,309772,425.51,High Demand
+19:00:00,226789,311.52,High Demand
+20:00:00,164550,226.03,Medium Demand
+21:00:00,125445,172.31,Medium Demand
+22:00:00,95612,131.34,Medium Demand
+23:00:00,63941,87.83,Medium Demand

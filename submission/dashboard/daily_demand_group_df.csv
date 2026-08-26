@@ -1,0 +1,8 @@
+days,total,average,demand_group
+Monday,455503,4338.12,Low Demand
+Tuesday,469109,4510.66,Medium Demand
+Wednesday,473048,4548.54,Medium Demand
+Thursday,485395,4667.26,High Demand
+Friday,487790,4690.29,High Demand
+Saturday,477807,4550.54,Medium Demand
+Sunday,444027,4228.83,Low Demand
