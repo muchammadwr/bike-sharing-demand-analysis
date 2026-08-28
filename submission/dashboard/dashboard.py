@@ -259,185 +259,332 @@ with daily_tab:
 
         st.plotly_chart(temperature_chart, use_container_width=True)
 
-        # ==================================================
-# BOTTOM ROW DATA PREPARATION
-# ==================================================
+    # ==================================================
+    # BOTTOM ROW DATA PREPARATION
+    # ==================================================
 
-# User type composition
-user_summary = pd.DataFrame(
-    {
-        "user_type": ["Registered", "Casual"],
-        "total_rentals": [registered_rentals, casual_rentals],
+    # User type composition
+    user_summary = pd.DataFrame(
+        {
+            "user_type": ["Registered", "Casual"],
+            "total_rentals": [registered_rentals, casual_rentals],
+        }
+    )
+
+    # Weekday demand aggregation
+    weekday_order = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    ]
+
+    weekday_summary = filtered_daily_df.groupby("weekday", as_index=False).agg(
+        average_rentals=("count", "mean")
+    )
+
+    # ==================================================
+    # BOTTOM ROW: TWO CHARTS
+    # ==================================================
+
+    bottom_chart1, bottom_chart2 = st.columns(2)
+
+    # ==================================================
+    # QUANTILE SEGMENTATION
+    # ==================================================
+
+    weekday_q2 = weekday_summary["average_rentals"].quantile(0.25)
+    weekday_q3 = weekday_summary["average_rentals"].quantile(0.75)
+
+    weekday_summary["demand_segment"] = np.select(
+        [
+            weekday_summary["average_rentals"] <= weekday_q2,
+            weekday_summary["average_rentals"] <= weekday_q3,
+        ],
+        ["Low Demand", "Medium Demand"],
+        default="High Demand",
+    )
+
+    # Sort weekday chronologically
+    weekday_summary["weekday"] = pd.Categorical(
+        weekday_summary["weekday"], categories=weekday_order, ordered=True
+    )
+
+    weekday_summary = weekday_summary.sort_values("weekday")
+
+    # Segment colors
+    segment_colors = {
+        "Low Demand": "#EF553B",
+        "Medium Demand": "#FFA15A",
+        "High Demand": "#00CC96",
     }
-)
 
+    # ------------------------------------------------
+    # USER TYPE PIE CHART
+    # ------------------------------------------------
 
-# Weekday demand aggregation
-weekday_order = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-]
+    with bottom_chart1:
+        user_chart = px.pie(
+            user_summary,
+            names="user_type",
+            values="total_rentals",
+            title="Rental Composition by User Type",
+            hole=0.4,
+            color="user_type",
+            color_discrete_map={"Registered": "#636EFA", "Casual": "#00CC96"},
+        )
 
-weekday_summary = filtered_daily_df.groupby("weekday", as_index=False).agg(
-    average_rentals=("count", "mean")
-)
+        user_chart.update_traces(
+            textposition="inside",
+            textinfo="percent+label",
+            hovertemplate=(
+                "<b>%{label}</b><br>"
+                "Total Rentals: %{value:,.0f}<br>"
+                "Share: %{percent}"
+                "<extra></extra>"
+            ),
+        )
 
+        st.plotly_chart(user_chart, use_container_width=True)
 
-# ==================================================
-# QUANTILE SEGMENTATION
-# ==================================================
+    # ------------------------------------------------
+    # WEEKDAY DEMAND SEGMENTATION
+    # ------------------------------------------------
 
-weekday_q33 = weekday_summary["average_rentals"].quantile(0.33)
-weekday_q67 = weekday_summary["average_rentals"].quantile(0.67)
+    with bottom_chart2:
+        weekday_chart = px.bar(
+            weekday_summary,
+            x="weekday",
+            y="average_rentals",
+            color="demand_segment",
+            title="Rental Demand Segmentation by Weekday",
+            labels={
+                "weekday": "Weekday",
+                "average_rentals": "Average Rentals",
+                "demand_segment": "Demand Segment",
+            },
+            color_discrete_map=segment_colors,
+            category_orders={
+                "weekday": weekday_order,
+                "demand_segment": ["Low Demand", "Medium Demand", "High Demand"],
+            },
+            text_auto=".0f",
+        )
 
-weekday_summary["demand_segment"] = np.select(
-    [
-        weekday_summary["average_rentals"] <= weekday_q33,
-        weekday_summary["average_rentals"] <= weekday_q67,
-    ],
-    ["Low Demand", "Medium Demand"],
-    default="High Demand",
-)
+        weekday_chart.update_traces(
+            textposition="outside",
+            hovertemplate=("<b>%{x}</b><br>Average Rentals: %{y:,.2f}<extra></extra>"),
+        )
 
+        weekday_chart.update_layout(
+            yaxis_title="Average Rentals", xaxis_title="Weekday"
+        )
 
-# Sort weekday chronologically
-weekday_summary["weekday"] = pd.Categorical(
-    weekday_summary["weekday"], categories=weekday_order, ordered=True
-)
+        st.plotly_chart(weekday_chart, use_container_width=True)
 
-weekday_summary = weekday_summary.sort_values("weekday")
+        st.caption(
+            f"Low: ≤ {weekday_q2:,.0f} | "
+            f"Medium: {weekday_q2:,.0f}–{weekday_q3:,.0f} | "
+            f"High: > {weekday_q3:,.0f}"
+        )
 
+    # ==================================================
+    # USER DEMAND SEGMENTATION
+    # ==================================================
 
-# Segment colors
-segment_colors = {
-    "Low Demand": "#EF553B",
-    "Medium Demand": "#FFA15A",
-    "High Demand": "#00CC96",
-}
+    segmented_daily_df = filtered_daily_df.copy()
 
-# ==================================================
-# BOTTOM ROW: TWO CHARTS
-# ==================================================
+    def create_demand_segment(df, column):
+        q33 = df[column].quantile(0.33)
+        q67 = df[column].quantile(0.67)
 
-bottom_chart1, bottom_chart2 = st.columns(2)
+        segment = pd.cut(
+            df[column],
+            bins=[float("-inf"), q33, q67, float("inf")],
+            labels=["Low Demand", "Medium Demand", "High Demand"],
+            include_lowest=True,
+        )
 
+        return segment, q33, q67
 
-# ------------------------------------------------
-# USER TYPE PIE CHART
-# ------------------------------------------------
-
-with bottom_chart1:
-    user_chart = px.pie(
-        user_summary,
-        names="user_type",
-        values="total_rentals",
-        title="Rental Composition by User Type",
-        hole=0.4,
-        color="user_type",
-        color_discrete_map={"Registered": "#636EFA", "Casual": "#00CC96"},
+    # Registered segmentation
+    (segmented_daily_df["registered_segment"], registered_q33, registered_q67) = (
+        create_demand_segment(segmented_daily_df, "registered")
     )
 
-    user_chart.update_traces(
-        textposition="inside",
-        textinfo="percent+label",
-        hovertemplate=(
-            "<b>%{label}</b><br>"
-            "Total Rentals: %{value:,.0f}<br>"
-            "Share: %{percent}"
-            "<extra></extra>"
-        ),
+    # Casual segmentation
+    (segmented_daily_df["casual_segment"], casual_q33, casual_q67) = (
+        create_demand_segment(segmented_daily_df, "casual")
     )
 
-    st.plotly_chart(user_chart, use_container_width=True)
+    # Consistent colors for both charts
+    segment_colors = {
+        "Low Demand": "#EF553B",
+        "Medium Demand": "#FFA15A",
+        "High Demand": "#00CC96",
+    }
 
-
-# ------------------------------------------------
-# WEEKDAY DEMAND SEGMENTATION
-# ------------------------------------------------
-
-with bottom_chart2:
-    weekday_chart = px.bar(
-        weekday_summary,
-        x="weekday",
-        y="average_rentals",
-        color="demand_segment",
-        title="Rental Demand Segmentation by Weekday",
-        labels={
-            "weekday": "Weekday",
-            "average_rentals": "Average Rentals",
-            "demand_segment": "Demand Segment",
-        },
-        color_discrete_map=segment_colors,
-        category_orders={
-            "weekday": weekday_order,
-            "demand_segment": ["Low Demand", "Medium Demand", "High Demand"],
-        },
-        text_auto=".0f",
-    )
-
-    weekday_chart.update_traces(
-        textposition="outside",
-        hovertemplate=("<b>%{x}</b><br>Average Rentals: %{y:,.2f}<extra></extra>"),
-    )
-
-    weekday_chart.update_layout(yaxis_title="Average Rentals", xaxis_title="Weekday")
-
-    st.plotly_chart(weekday_chart, use_container_width=True)
-
-    st.caption(
-        f"Low: ≤ {weekday_q33:,.0f} | "
-        f"Medium: {weekday_q33:,.0f}–{weekday_q67:,.0f} | "
-        f"High: > {weekday_q67:,.0f}"
-    )
-
-# ==================================================
-# USER DEMAND SEGMENTATION
-# ==================================================
-
-segmented_daily_df = filtered_daily_df.copy()
-
-
-def create_demand_segment(df, column):
-    q33 = df[column].quantile(0.33)
-    q67 = df[column].quantile(0.67)
-
-    segment = pd.cut(
-        df[column],
-        bins=[float("-inf"), q33, q67, float("inf")],
-        labels=["Low Demand", "Medium Demand", "High Demand"],
-        include_lowest=True,
-    )
-
-    return segment, q33, q67
-
-
-# Registered segmentation
-(segmented_daily_df["registered_segment"], registered_q33, registered_q67) = (
-    create_demand_segment(segmented_daily_df, "registered")
-)
-
-
-# Casual segmentation
-(segmented_daily_df["casual_segment"], casual_q33, casual_q67) = create_demand_segment(
-    segmented_daily_df, "casual"
-)
-
-
-# Consistent colors for both charts
-segment_colors = {
-    "Low Demand": "#EF553B",
-    "Medium Demand": "#FFA15A",
-    "High Demand": "#00CC96",
-}
-
-segment_order = ["Low Demand", "Medium Demand", "High Demand"]
-
+    segment_order = ["Low Demand", "Medium Demand", "High Demand"]
 
 # ==================================================
 # HOURLY TAB
 # ==================================================
+# ==================================================
+# HOURLY TAB
+# ==================================================
+
+with hourly_tab:
+    st.subheader("Hourly Rental Analysis")
+
+    if filtered_hourly_df.empty:
+        st.warning("No hourly data is available for the selected period.")
+        st.stop()
+
+    # ==================================================
+    # DATA PREPARATION
+    # ==================================================
+
+    hourly_analysis_df = filtered_hourly_df.copy()
+
+    # Menormalkan kolom hour menjadi angka 0–23
+    numeric_hour = pd.to_numeric(hourly_analysis_df["hour"], errors="coerce")
+
+    if numeric_hour.notna().all():
+        hourly_analysis_df["hour_number"] = numeric_hour.astype(int)
+
+    else:
+        hourly_analysis_df["hour_number"] = pd.to_timedelta(
+            hourly_analysis_df["hour"].astype(str)
+        ).dt.components["hours"]
+
+    # Average rental demand by hour
+    hourly_summary = (
+        hourly_analysis_df.groupby("hour_number", as_index=False)
+        .agg(average_rentals=("count", "mean"))
+        .sort_values("hour_number")
+    )
+
+    # User composition
+    hourly_user_summary = pd.DataFrame(
+        {
+            "user_type": ["Registered", "Casual"],
+            "total_rentals": [
+                hourly_analysis_df["registered"].sum(),
+                hourly_analysis_df["casual"].sum(),
+            ],
+        }
+    )
+
+    # ==================================================
+    # QUANTILE SEGMENTATION
+    # ==================================================
+
+    hourly_q33 = hourly_summary["average_rentals"].quantile(0.33)
+
+    hourly_q67 = hourly_summary["average_rentals"].quantile(0.67)
+
+    hourly_summary["demand_segment"] = np.select(
+        [
+            hourly_summary["average_rentals"] <= hourly_q33,
+            hourly_summary["average_rentals"] <= hourly_q67,
+        ],
+        ["Low Demand", "Medium Demand"],
+        default="High Demand",
+    )
+
+    segment_colors = {
+        "Low Demand": "#EF553B",
+        "Medium Demand": "#FFA15A",
+        "High Demand": "#00CC96",
+    }
+
+    segment_order = ["Low Demand", "Medium Demand", "High Demand"]
+
+    # ==================================================
+    # CHART ROW
+    # ==================================================
+
+    hourly_chart1, hourly_chart2 = st.columns(2)
+
+    # ------------------------------------------------
+    # CHART 1: USER COMPOSITION
+    # ------------------------------------------------
+
+    with hourly_chart1:
+        hourly_user_chart = px.pie(
+            hourly_user_summary,
+            names="user_type",
+            values="total_rentals",
+            title="Hourly Rental Composition by User Type",
+            hole=0.4,
+            color="user_type",
+            color_discrete_map={"Registered": "#636EFA", "Casual": "#00CC96"},
+        )
+
+        hourly_user_chart.update_traces(
+            textposition="inside",
+            textinfo="percent+label",
+            hovertemplate=(
+                "<b>%{label}</b><br>"
+                "Total Rentals: %{value:,.0f}<br>"
+                "Share: %{percent}"
+                "<extra></extra>"
+            ),
+        )
+
+        st.plotly_chart(
+            hourly_user_chart, use_container_width=True, key="hourly_user_composition"
+        )
+
+    # ------------------------------------------------
+    # CHART 2: DEMAND SEGMENTATION BY HOUR
+    # ------------------------------------------------
+
+    with hourly_chart2:
+        hourly_demand_chart = px.bar(
+            hourly_summary,
+            x="hour_number",
+            y="average_rentals",
+            color="demand_segment",
+            title="Rental Demand Segmentation by Hour",
+            labels={
+                "hour_number": "Hour",
+                "average_rentals": "Average Rentals",
+                "demand_segment": "Demand Segment",
+            },
+            color_discrete_map=segment_colors,
+            category_orders={"demand_segment": segment_order},
+            text_auto=".0f",
+        )
+
+        hourly_demand_chart.update_traces(
+            textposition="outside",
+            hovertemplate=(
+                "<b>Hour: %{x}:00</b><br>Average Rentals: %{y:,.2f}<extra></extra>"
+            ),
+        )
+
+        hourly_demand_chart.update_layout(
+            xaxis_title="Hour",
+            yaxis_title="Average Rentals",
+            legend_title="Demand Segment",
+        )
+
+        hourly_demand_chart.update_xaxes(
+            tickmode="linear", tick0=0, dtick=1, range=[-0.5, 23.5]
+        )
+
+        st.plotly_chart(
+            hourly_demand_chart,
+            use_container_width=True,
+            key="hourly_demand_segmentation",
+        )
+
+        st.caption(
+            f"Low: ≤ {hourly_q33:,.0f} | "
+            f"Medium: {hourly_q33:,.0f}–{hourly_q67:,.0f} | "
+            f"High: > {hourly_q67:,.0f}"
+        )
