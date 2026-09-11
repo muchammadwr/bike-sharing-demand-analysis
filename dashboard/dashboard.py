@@ -9,6 +9,8 @@ import plotly.express as px
 # ==================================================
 # PAGE CONFIGURATION
 # ==================================================
+
+
 st.set_page_config(page_title="Bike Sharing Dashboard", page_icon="🚲", layout="wide")
 st.title("🚲 Bike Sharing Demand Analytics")
 st.subheader("Understanding Rental Patterns to Improve Operational Efficiency")
