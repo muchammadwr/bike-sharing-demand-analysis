@@ -403,3 +403,64 @@ with hourly_tab:
         )
 
         st.plotly_chart(temperature_chart, use_container_width=True)
+
+    with chart4:
+        demand_labels = ["Low", "Medium", "High"]
+
+        segment_colors = {
+            "Low": "#EF553B",
+            "Medium": "#FFA15A",
+            "High": "#00CC96",
+        }
+
+        hour_order = [f"{hour:02d}:00" for hour in range(24)]
+
+        # Calculate baseline average demand
+        hourly_baseline = hourly_df.groupby("hour", as_index=False).agg(
+            average=("count", "mean")
+        )
+
+        # Fixed thresholds
+        low_threshold = hourly_baseline["average"].quantile(1 / 3)
+        high_threshold = hourly_baseline["average"].quantile(2 / 3)
+
+        # Calculate filtered hourly demand
+        hourly_demand = (
+            filtered_hourly_df.groupby("hour", as_index=False)
+            .agg(total=("count", "sum"), average=("count", "mean"))
+            .round(2)
+        )
+
+        # Create readable hour labels
+        hourly_demand["hour_label"] = hourly_demand["hour"].astype(str).str.slice(0, 5)
+
+        # Classify demand
+        hourly_demand["demand"] = pd.cut(
+            hourly_demand["average"],
+            bins=[-float("inf"), low_threshold, high_threshold, float("inf")],
+            labels=demand_labels,
+            include_lowest=True,
+        )
+
+        # Create chart
+        fig_seg = px.bar(
+            hourly_demand,
+            x="hour_label",
+            y="average",
+            color="demand",
+            color_discrete_map=segment_colors,
+            category_orders={
+                "hour_label": hour_order,
+                "demand": demand_labels,
+            },
+            title="Average Bike Rental Demand by Hour",
+            labels={
+                "hour_label": "Hour",
+                "average": "Average Rentals",
+                "demand": "Demand Group",
+            },
+        )
+
+        fig_seg.update_traces(texttemplate="%{y:.0f}", textposition="outside")
+
+        st.plotly_chart(fig_seg, use_container_width=True)
