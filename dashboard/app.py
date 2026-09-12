@@ -41,7 +41,7 @@ max_date = daily_df["date"].max().date()
 
 # SIDEBAR FILTERS
 with st.sidebar:
-    st.image("logo.png", width=200, output_format="PNG")
+    st.image(BASE_DIR / "logo.png", width=200, output_format="PNG")
 
     st.title("Navigation")
 
