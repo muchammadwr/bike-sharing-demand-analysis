@@ -1,10 +1,15 @@
-import numpy as np
+from pathlib import Path
+
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+
 import streamlit as st
 import plotly.express as px
 
+BASE_DIR = Path(__file__).resolve().parent
+
+
+# PATH CONFIGURATION
+BASE_DIR = Path(__file__).resolve().parent
 
 # PAGE CONFIGURATION
 
@@ -20,8 +25,8 @@ def load_data(path):
     return pd.read_csv(path)
 
 
-daily_df = load_data("daily_df.csv")
-hourly_df = load_data("hourly_df.csv")
+daily_df = load_data(BASE_DIR / "daily_df.csv")
+hourly_df = load_data(BASE_DIR / "hourly_df.csv")
 
 # DATA PREPARATION
 
