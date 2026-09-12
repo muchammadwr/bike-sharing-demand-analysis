@@ -57,33 +57,31 @@ with st.sidebar:
         max_value=max_date,
     )
 
-# ==================================================
-# VALIDATE DATE RANGE
-# ==================================================
+    # ==================================================
+    # VALIDATE DATE RANGE
+    # ==================================================
 
-if len(selected_dates) != 2:
-    st.warning("Please select both start and end dates.")
-    st.stop()
+    if len(selected_dates) != 2:
+        st.warning("Please select both start and end dates.")
+        st.stop()
 
-start_date, end_date = selected_dates
+    start_date, end_date = selected_dates
 
-if start_date > end_date:
-    st.error("Start date cannot be later than end date.")
-    st.stop()
+    if start_date > end_date:
+        st.error("Start date cannot be later than end date.")
+        st.stop()
 
+    # ==================================================
+    # FILTER DATA
+    # ==================================================
 
-# ==================================================
-# FILTER DATA
-# ==================================================
+    filtered_daily_df = daily_df[
+        daily_df["date"].dt.date.between(start_date, end_date, inclusive="both")
+    ].copy()
 
-filtered_daily_df = daily_df[
-    daily_df["date"].dt.date.between(start_date, end_date, inclusive="both")
-].copy()
-
-
-filtered_hourly_df = hourly_df[
-    hourly_df["date"].dt.date.between(start_date, end_date, inclusive="both")
-].copy()
+    filtered_hourly_df = hourly_df[
+        hourly_df["date"].dt.date.between(start_date, end_date, inclusive="both")
+    ].copy()
 
 
 # ==================================================

@@ -36,7 +36,7 @@ max_date = daily_df["date"].max().date()
 
 # SIDEBAR FILTERS
 with st.sidebar:
-    st.image("logo.png", width="content", output_format="PNG")
+    st.image("logo.png", width=200, output_format="PNG")
 
     st.title("Navigation")
 
@@ -122,6 +122,7 @@ total_rentals = filtered_daily_df["count"].sum()
 registered_rentals = filtered_daily_df["registered"].sum()
 casual_rentals = filtered_daily_df["casual"].sum()
 
+
 # Calculate rental shares
 if total_rentals > 0:
     registered_share = registered_rentals / total_rentals * 100
@@ -160,13 +161,245 @@ with kpi3:
 
 daily_tab, hourly_tab = st.tabs(["📅 Daily Analysis", "⏰ Hourly Analysis"])
 
-daily_chart = px.line(
-    filtered_daily_df,
-    x="date",
-    y="count",
-    title="Daily Rental Trend",
-    markers=True,
-    labels={"date": "Date", "count": "Total Rentals"},
-)
+# Daily Tab
+with daily_tab:
+    daily_chart_line = px.line(
+        filtered_daily_df,
+        x="date",
+        y="count",
+        title="Daily Rental Trend",
+        markers=True,
+        labels={"date": "Date", "count": "Total Rentals"},
+    )
 
-st.plotly_chart(daily_chart, use_container_width=True)
+    st.plotly_chart(daily_chart_line, use_container_width=True)
+
+    # Chart firs row
+    chart1, chart2 = st.columns(2)
+
+    # Monthly Chart
+    with chart1:
+        month_order = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ]
+        avg_monthly = (
+            filtered_daily_df.groupby("month")["count"].agg(["mean"]).reset_index()
+        )
+
+        avg_monthly["month"] = pd.Categorical(
+            avg_monthly["month"], categories=month_order, ordered=True
+        )
+
+        avg_monthly = avg_monthly.sort_values("month")
+
+        monthly_chart = px.bar(
+            avg_monthly,
+            x="month",
+            y="mean",
+            title="Average Rental Demand by Month",
+            labels={"month": "Month", "average_rentals": "Average Rentals"},
+        )
+
+        st.plotly_chart(monthly_chart, use_container_width=True)
+
+    with chart2:
+        # Avg. Temperature
+        temperature_chart = px.scatter(
+            filtered_daily_df,
+            x="temperature",
+            y="count",
+            title="Rental Demand by Temperature",
+            labels={"temperature": "Temperature (°C)", "count": "Total Rentals"},
+            opacity=0.7,
+            trendline="ols",
+        )
+
+        st.plotly_chart(temperature_chart, use_container_width=True)
+
+    # Chart second Row
+    chart3, chart4 = st.columns(2)
+
+    with chart3:
+        # Avg Daily by Weather
+        avg_daily_rentals_by_weathersit = (
+            filtered_daily_df.groupby("weathersit")["count"].agg(["mean"]).reset_index()
+        )
+        avg_daily_rentals_by_weathersit_chart = px.bar(
+            avg_daily_rentals_by_weathersit,
+            x="weathersit",
+            y="mean",
+            title="Average Rental by Weathersit",
+            labels={"weathersit": "Weather", "mean": "Average"},
+        )
+        st.plotly_chart(avg_daily_rentals_by_weathersit_chart, use_container_width=True)
+
+    with chart4:
+        # Avg Daily by Weather
+        avg_daily_rentals_by_season = (
+            filtered_daily_df.groupby("season")["count"].agg(["mean"]).reset_index()
+        )
+        avg_daily_rentals_by_season_chart = px.bar(
+            avg_daily_rentals_by_season,
+            x="season",
+            y="mean",
+            title="Average Rental by Season",
+            labels={"season": "Season", "mean": "Average"},
+        )
+        st.plotly_chart(avg_daily_rentals_by_season_chart, use_container_width=True)
+
+    # Chart Third Row
+    chart5, chart6 = st.columns(2)
+
+    # Casual vs Registered
+    with chart5:
+        user_type_df = pd.DataFrame(
+            {
+                "user_type": ["Registered", "Casual"],
+                "total": [
+                    filtered_daily_df["registered"].sum(),
+                    filtered_daily_df["casual"].sum(),
+                ],
+            }
+        )
+
+        fig_usertype = px.pie(
+            user_type_df,
+            names="user_type",
+            values="total",
+            title="Bike Rentals by User Type",
+        )
+
+        st.plotly_chart(fig_usertype, use_container_width=True)
+
+    # Grouping base on Low, Medium, and High demand
+    with chart6:
+        weekday_order = [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+        ]
+        demand_labels = ["Low", "Medium", "High"]
+        segment_colors = {
+            "Low": "#EF553B",
+            "Medium": "#FFA15A",
+            "High": "#00CC96",
+        }
+
+        weekday_baseline = daily_df.groupby("weekday", as_index=False).agg(
+            average=("count", "mean")
+        )
+
+        # Fixed thresholds based on full dataset
+        low_threshold = weekday_baseline["average"].quantile(1 / 3)
+        high_threshold = weekday_baseline["average"].quantile(2 / 3)
+
+        # Calculate demand from filtered dataset
+        weekday_demand = (
+            filtered_daily_df.groupby("weekday", as_index=False)
+            .agg(total=("count", "sum"), average=("count", "mean"))
+            .round(2)
+        )
+
+        # Classify filtered demand using fixed thresholds
+        weekday_demand["demand"] = pd.cut(
+            weekday_demand["average"],
+            bins=[-float("inf"), low_threshold, high_threshold, float("inf")],
+            labels=demand_labels,
+            include_lowest=True,
+        )
+
+        fig_seg = px.bar(
+            weekday_demand,
+            x="weekday",
+            y="average",
+            color="demand",
+            color_discrete_map=segment_colors,
+            category_orders={"weekday": weekday_order, "demand": demand_labels},
+            title="Average Bike Rental Demand by Weekday",
+            labels={
+                "weekday": "Weekday",
+                "average": "Average Rentals",
+                "demand": "Demand Group",
+            },
+        )
+
+        fig_seg.update_traces(texttemplate="%{y:.0f}", textposition="outside")
+
+        st.plotly_chart(fig_seg, use_container_width=True)
+
+
+# Hourly Tab
+with hourly_tab:
+    # Demand by hourly
+    hourly_demand = filtered_hourly_df.groupby("hour")["count"].sum().reset_index()
+    hourly_chart_line = px.line(
+        hourly_demand,
+        x="hour",
+        y="count",
+        title="Daily Rental Trend",
+        markers=True,
+        labels={"date": "Hour", "count": "Total Rentals"},
+    )
+    st.plotly_chart(hourly_chart_line, use_container_width=True)
+
+    chart1, chart2 = st.columns(2)
+
+    # Temperature hourly
+    with chart1:
+        avg_temperature_hourly = filtered_hourly_df.groupby("hour", as_index=False)[
+            "temperature"
+        ].agg(["mean"])
+        temperature_chart = px.scatter(
+            avg_temperature_hourly,
+            x="hour",
+            y="mean",
+            title="Temperature",
+            labels={"temperature": "Temperature (°C)", "avg": "Total Rentals"},
+        )
+
+        st.plotly_chart(temperature_chart, use_container_width=True)
+
+    # Humidity hourly
+    with chart2:
+        avg_humidity = filtered_hourly_df.groupby("hour", as_index=False)[
+            "humidity"
+        ].agg(["mean"])
+        temperature_chart = px.scatter(
+            avg_temperature_hourly,
+            x="hour",
+            y="mean",
+            title="Humidity",
+            labels={"temperature": "Temperature (°C)", "avg": "Total Rentals"},
+        )
+
+        st.plotly_chart(temperature_chart, use_container_width=True)
+
+    chart3, chart4 = st.columns(2)
+    with chart3:
+        avg_windspeed = filtered_hourly_df.groupby("hour", as_index=False)[
+            "windspeed"
+        ].agg(["mean"])
+        temperature_chart = px.scatter(
+            avg_windspeed,
+            x="hour",
+            y="mean",
+            title="Windspeed",
+            labels={"temperature": "Temperature (°C)", "avg": "Total Rentals"},
+        )
+
+        st.plotly_chart(temperature_chart, use_container_width=True)
