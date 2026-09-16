@@ -67,7 +67,7 @@ Data preparation and analysis were performed using **Python in Google Colab**, i
 ## Dashboard
 
 **Live Dashboard:**  
-[Bike Sharing Demand Analytics](https://bikesharingdemandanalytics.streamlit.app/)
+https://bikesharingdemandanalytics.streamlit.app/
 
 ![Dashboard](https://github.com/muchammadwr/bike-sharing-demand-analysis/blob/main/images/dashboard.png)
 
