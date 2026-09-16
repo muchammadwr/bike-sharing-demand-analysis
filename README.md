@@ -1,10 +1,5 @@
 # Bike Sharing Demand Analysis 🚲
 
-
-
-
-# Analyzing the Indonesian Supermarket Business
-
 ## Project Overview
 
 
@@ -47,23 +42,27 @@ The dataset was cleaned in Google Colab by Python Programming Languages:
 
 ## Project Workflow
 
-```text
-Raw Data → Data Cleaning → Data Analysis → Dashboard
-                                ↓
-                     Predictive Modeling
-                                ↓
-                  Insights and Recommendations
+```mermaid
+
 ```
 
-## Key Insights
+## Conclusion & Recommendation
 
-* **Sales trend:** `[Insert finding]`
-* **Top region:** `[Insert finding]`
-* **Top category:** `[Insert finding]`
-* **Top city:** `[Insert finding]`
-* **Preferred shipping method:** `[Insert finding]`
-* **Peak sales month:** `[Insert finding]`
-* **Best prediction model:** `[Insert finding]`
+- **Question 1:** Prioritize bike availability and operational capacity during peak demand on **Wednesday–Friday**, especially between **17:00 and 18:00**.
+- **Question 2:** Increase bike availability and operational capacity during the high-demand period from **May to September**, particularly in **September**.
+- **Question 3:** Use weather forecasts to adjust bike availability and operational resources, prioritizing clear-weather periods when demand is highest.
+- **Question 4:** Use temperature as the primary weather variable for forecasting bike rental demand because it has the strongest positive relationship with rentals.
+- **Question 5:** Prioritize registered-user retention while creating incentives to convert more casual users into registered members.
+- **Question 6:** Apply different strategies for each customer type: support weekday commuting for registered users and promote weekend leisure rentals to casual users.
+- **Question 7:** Prioritize bike availability during high-demand periods, particularly on **Thursday and Friday** around the morning and evening commuting hours.
+
+- **Action 1:** Reallocate bikes and schedule additional staff before **17:00** at high-demand stations, while using low-demand hours such as **00:00–05:00** for maintenance and redistribution.
+- **Action 2:** Prepare additional bikes, staffing, and maintenance before **May**, then gradually reduce capacity after **September** as demand declines toward December.
+- **Action 3:** Increase bike distribution and staffing before clear-weather days, while reducing capacity and scheduling maintenance during periods of heavy rain or snow.
+- **Action 4:** Increase bike availability and staffing on warmer days, while maintaining standard or reduced capacity when temperatures are lower.
+- **Action 5:** Launch targeted membership promotions for frequent casual users, such as introductory discounts or loyalty rewards, while maintaining benefits for existing registered users.
+- **Action 6:** Ensure more bikes are available for registered users on weekdays, especially **Thursday**, and offer weekend promotions to casual users, particularly on **Saturday**.
+- **Action 7:** Redistribute bikes and increase operational support before **08:00** and **17:00–18:00**, while scheduling maintenance during the low-demand period of **00:00–05:00**.
 
 ## Deliverables
 
