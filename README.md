@@ -42,12 +42,12 @@ Data preparation and analysis were performed using **Python in Google Colab**, i
 ## Key Findings
 
 - Rental demand was relatively high during **Wednesday–Friday**.
-- The strongest hourly demand occurred around **17:00–18:00**.
+- The strongest hourly demand occurred around **17:00 - 18:00**.
 - Demand was generally higher from **May to September**.
 - Clear weather was associated with higher average rental demand.
 - **Temperature** showed the strongest positive relationship with rental demand among the analyzed weather factors.
 - **Registered users** contributed the majority of total rentals.
-- Very low demand during **00:00–05:00** provides potential periods for maintenance and bike redistribution.
+- Very low demand during **00:00 - 05:00** provides potential periods for maintenance and bike redistribution.
 
 ## Recommendations
 
