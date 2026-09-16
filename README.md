@@ -59,10 +59,10 @@ Data preparation and analysis were performed using **Python in Google Colab**, i
 
 ## Tools
 
-- **Python & Pandas** — Data cleaning and analysis
-- **Matplotlib, Seaborn & Plotly** — Data visualization
-- **Google Colab** — Data preparation and EDA
-- **Streamlit** — Interactive dashboard and deployment
+- **Python & Pandas** - Data cleaning and analysis
+- **Matplotlib, Seaborn & Plotly** - Data visualization
+- **Google Colab** - Data preparation and EDA
+- **Streamlit** - Interactive dashboard and deployment
 
 ## Dashboard
 
